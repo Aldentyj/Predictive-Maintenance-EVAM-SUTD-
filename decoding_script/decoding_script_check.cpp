@@ -7,14 +7,12 @@
 
 using namespace std;
 
-// ================= CAN STRUCT =================
 
 struct CAN_Message {
     uint32_t identifier;
     uint8_t data[8] = {0};
 };
 
-// ================= TELEMETRY =================
 
 struct Telemetry {
 
@@ -43,7 +41,6 @@ struct Telemetry {
 } T;
 
 
-// ================= UTILS =================
 
 uint16_t getLE(uint8_t *data, int start) {
     return data[start] | (data[start + 1] << 8);
@@ -63,7 +60,6 @@ vector<uint8_t> parseHex(const string &hexStr) {
 }
 
 
-// ================= FEATURE WRITER =================
 
 void writeFeatureRow(ofstream &out) {
 
@@ -104,7 +100,6 @@ void writeFeatureRow(ofstream &out) {
         T.Battery_Temp_Max_C *
         fabs(T.Battery_Current_A);
 
-    // ===== WRITE CSV ROW =====
 
     out << T.Vehicle_Speed_kmh << ","
         << rpm_mean << ","
@@ -127,7 +122,6 @@ void writeFeatureRow(ofstream &out) {
 }
 
 
-// ================= DECODER =================
 
 void decodeCAN(CAN_Message &msg, ofstream &out) {
 
@@ -165,21 +159,19 @@ void decodeCAN(CAN_Message &msg, ofstream &out) {
         case 0x38:
             T.Vehicle_Speed_kmh = getLE(d,0) / 256.0;
 
-            // Trigger snapshot when speed arrives
             writeFeatureRow(out);
             break;
     }
 }
 
 
-// ================= MAIN =================
 
 int main() {
 
     ifstream file("can_log_dataset.csv");
 
     if (!file.is_open()) {
-        cout << "❌ Failed to open can_log_dataset.csv\n";
+        cout << "Failed to open can_log_dataset.csv\n";
         return 1;
     }
 
@@ -205,7 +197,7 @@ int main() {
         << "Brake_Pressure_Diff\n";
 
     string line;
-    getline(file, line); // skip header
+    getline(file, line); 
 
     while (getline(file, line)) {
 
@@ -219,8 +211,8 @@ int main() {
 
         if (cols.size() < 8) continue;
 
-        string idStr = cols[5];    // Frame Id column
-        string dataStr = cols[7];  // Data(Hex) column
+        string idStr = cols[5];    
+        string dataStr = cols[7]; 
 
         uint32_t id = stoul(idStr, nullptr, 16);
         vector<uint8_t> data = parseHex(dataStr);
@@ -234,7 +226,7 @@ int main() {
         decodeCAN(msg, out);
     }
 
-    cout << "✅ Feature dataset saved to iforest_features.csv\n";
+    cout << "Feature dataset saved to iforest_features.csv\n";
 
     return 0;
 }
